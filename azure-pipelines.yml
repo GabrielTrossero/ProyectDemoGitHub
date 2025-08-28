@@ -27,3 +27,44 @@ steps:
 
 - script: dotnet test --configuration $(buildConfiguration)
   displayName: 'Correr tests'
+
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+# 1. Checkout del código
+- task: Checkout@1
+  displayName: 'Checkout del código'
+
+# 2. Instalar SDK .NET 8
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+# 3. Restaurar dependencias
+- script: dotnet restore
+  displayName: 'Restaurar dependencias'
+
+# 4. Compilar
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Compilar proyecto'
+
+# 5. Publicar (genera carpeta para deploy)
+- script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+  displayName: 'Publicar aplicación'
+
+# 6. Deploy a Azure App Service
+- task: AzureWebApp@1
+  displayName: 'Desplegar a Azure App Service'
+  inputs:
+    azureSubscription: '<Azure subscription 1>'
+    appName: '<My-App-ProyectDemoGitHub>'
+    package: '$(Build.ArtifactStagingDirectory)/**.zip'
