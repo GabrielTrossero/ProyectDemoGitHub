@@ -37,7 +37,7 @@ steps:
 # Deploy a Azure Web App
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'MyAzureConnection'  # <--- Service Connection creada
+    azureSubscription: 'MyAzureConnection'
     appName: 'My-App-ProyectDemoGitHub'
     package: '$(Build.ArtifactStagingDirectory)'
 
