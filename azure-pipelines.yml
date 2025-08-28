@@ -13,39 +13,31 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-# 1. Checkout del código
-- uses: actions/checkout@v4
+# Checkout
+- task: Checkout@1
 
-# 2. Instalar SDK .NET 8
-- uses: actions/setup-dotnet@v4
-  with:
-    dotnet-version: '8.x'
+# Instalar .NET 8
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
 
-# 3. Restaurar dependencias
-- name: Restore dependencies
-  run: dotnet restore
+# Restaurar dependencias
+- script: dotnet restore
+  displayName: 'Restore dependencies'
 
-# 4. Compilar
-- name: Build
-  run: dotnet build --configuration $(buildConfiguration)
+# Compilar
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build project'
 
-# 5. Publicar (prepara archivos para deploy)
-- name: Publish
-  run: dotnet publish --configuration $(buildConfiguration) --output ./publish
+# Publicar
+- script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish project'
 
-# 6. Login a Azure
-- name: Azure Login
-  uses: azure/login@v2
-  with:
-    client-id: ${{ secrets.AZURE_CLIENT_ID }}         # App Registration Client ID
-    tenant-id: ${{ secrets.AZURE_TENANT_ID }}         # Tenant ID
-    subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }} # Subscription ID
-
-# 7. Deploy a Azure Web App
-- name: Deploy to Azure Web App
-  uses: azure/webapps-deploy@v3
-  with:
-    app-name: 'My-App-ProyectDemoGitHub'
-    slot-name: 'Production'
-    package: './publish'
+# Deploy a Azure Web App
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'MyAzureConnection'  # <--- Service Connection creada
+    appName: 'My-App-ProyectDemoGitHub'
+    package: '$(Build.ArtifactStagingDirectory)'
 
